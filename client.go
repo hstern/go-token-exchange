@@ -39,20 +39,30 @@ type Client interface {
 	Exchange(ctx context.Context, req *TokenExchangeRequest) (*TokenExchangeResponse, error)
 }
 
-// NewClient returns a [Client] that talks to tokenEndpoint using
-// [http.DefaultClient]. Use [WithHTTPClient] (or whichever option
-// the consumer ships) to inject a configured *http.Client carrying
-// the client authentication the AS requires.
+// NewClient returns a [Client] that talks to tokenEndpoint. Use
+// [WithHTTPClient] (and any other [Option] this package ships) to
+// override the defaults — most importantly, to inject a configured
+// *http.Client carrying the client authentication the AS requires.
 //
 // tokenEndpoint must be the absolute URL of the AS token endpoint
 // (e.g. https://as.example.com/token). The constructor does not
 // validate the URL beyond being non-empty; downstream callers that
 // want strict validation should do that at configuration time.
-func NewClient(tokenEndpoint string) Client {
-	return &httpClient{
+//
+// Options are applied in argument order, so a later option wins on
+// any field. A nil option is silently skipped.
+func NewClient(tokenEndpoint string, opts ...Option) Client {
+	c := &httpClient{
 		tokenEndpoint: tokenEndpoint,
 		httpClient:    http.DefaultClient,
 	}
+	for _, opt := range opts {
+		if opt == nil {
+			continue
+		}
+		opt(c)
+	}
+	return c
 }
 
 // httpClient is the default Client implementation: an HTTP POST to

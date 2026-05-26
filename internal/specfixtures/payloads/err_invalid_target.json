@@ -1,0 +1,4 @@
+{
+  "error": "invalid_target",
+  "error_description": "Resource 'https://other.example.com/' is not authorized for this client."
+}

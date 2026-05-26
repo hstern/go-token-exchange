@@ -1,0 +1,17 @@
+# Go build outputs
+*.exe
+*.test
+*.out
+
+# Coverage
+coverage.out
+coverage.html
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+
+# Local environment
+.env
+.env.local

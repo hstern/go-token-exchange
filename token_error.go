@@ -83,6 +83,11 @@ const (
 //
 // or, equivalently, hold the sentinel value as a package-level var.
 //
+// TokenExchangeError also wraps an underlying cause via WithCause /
+// Unwrap, so a client that receives a transport or decode error in
+// the same turn as a protocol error can return a single typed value
+// that errors.Is and errors.As can walk through.
+//
 // Naming: same TokenExchange prefix as TokenExchangeRequest and
 // TokenExchangeResponse, for the same spec-name reason.
 //
@@ -102,6 +107,41 @@ type TokenExchangeError struct {
 	// URI is a URI identifying a human-readable web page with
 	// information about the error. Optional.
 	URI string `json:"error_uri,omitempty"`
+
+	// cause is the underlying error this TokenExchangeError wraps.
+	// Populated via WithCause; surfaced via Unwrap. Unexported so
+	// encoding/json ignores it (a Go-side chain artifact, not a
+	// wire field).
+	cause error
+}
+
+// WithCause returns a shallow copy of e with cause attached, so
+// errors.Is and errors.As can walk through the typed protocol error
+// to the underlying transport, decode, or I/O error. The receiver
+// is not mutated, which matters because sentinel TokenExchangeError
+// values are often constructed once and reused (e.g. via
+// errors.Is(err, &TokenExchangeError{Code: ErrCodeInvalidTarget})).
+//
+// Calling WithCause on a nil receiver returns nil. Setting cause to
+// nil clears any previously-attached cause on the copy.
+func (e *TokenExchangeError) WithCause(cause error) *TokenExchangeError {
+	if e == nil {
+		return nil
+	}
+	out := *e
+	out.cause = cause
+	return &out
+}
+
+// Unwrap returns the underlying error attached via WithCause, or
+// nil if none. It enables [errors.Is] and [errors.As] to walk past
+// the typed protocol error to a transport or decode cause held by
+// the client-side Exchange.
+func (e *TokenExchangeError) Unwrap() error {
+	if e == nil {
+		return nil
+	}
+	return e.cause
 }
 
 // Error returns a brief string describing the error, suitable for

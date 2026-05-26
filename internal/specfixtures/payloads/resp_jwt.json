@@ -1,0 +1,7 @@
+{
+  "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6IjE2In0.issued-jwt-payload",
+  "issued_token_type": "urn:ietf:params:oauth:token-type:jwt",
+  "token_type": "N_A",
+  "expires_in": 300,
+  "scope": "https://backend.example.com/api"
+}
